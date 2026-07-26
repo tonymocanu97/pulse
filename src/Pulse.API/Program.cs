@@ -179,6 +179,8 @@ namespace Pulse.API
 
             app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
+
             app.UseCors("Frontend");
 
             app.UseAuthentication();

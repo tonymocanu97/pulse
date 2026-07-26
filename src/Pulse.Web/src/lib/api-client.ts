@@ -1,4 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5035/api';
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 
 export class ApiError extends Error {
   status: number;
@@ -58,4 +59,4 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   return JSON.parse(raw) as T;
 }
 
-export { API_BASE_URL };
+export { API_BASE_URL, API_ORIGIN };

@@ -14,9 +14,17 @@ namespace Pulse.Application.Messages.DTOs
         MessageType Type,
         DateTime SentAt,
         bool IsEdited,
-        IReadOnlyList<MessageReactionDto> Reactions);
+        IReadOnlyList<MessageReactionDto> Reactions,
+        string? AttachmentUrl,
+        string? AttachmentFileName,
+        long? AttachmentSizeBytes);
 
-    public record SendMessageRequest(string Content, MessageType Type);
+    public record SendMessageRequest(
+        string Content,
+        MessageType Type,
+        string? AttachmentUrl = null,
+        string? AttachmentFileName = null,
+        long? AttachmentSizeBytes = null);
 
     public record ToggleReactionRequest(string Emoji);
 }

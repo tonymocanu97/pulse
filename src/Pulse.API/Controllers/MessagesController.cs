@@ -27,12 +27,21 @@ namespace Pulse.API.Controllers
         public async Task<ActionResult<MessageDto>> Send(int conversationId, SendMessageRequest request, CancellationToken ct)
         {
             var (response, error) = await mediator.Send(
-                new SendMessageCommand(conversationId, CurrentUserId, request.Content, request.Type), ct);
+                new SendMessageCommand(
+                    conversationId,
+                    CurrentUserId,
+                    request.Content,
+                    request.Type,
+                    request.AttachmentUrl,
+                    request.AttachmentFileName,
+                    request.AttachmentSizeBytes),
+                ct);
 
             return error switch
             {
                 SendMessageError.EmptyContent => BadRequest("Message content cannot be empty."),
                 SendMessageError.NotParticipant => Forbid(),
+                SendMessageError.MissingAttachment => BadRequest("An attachment is required for this message type."),
                 _ => Ok(response)
             };
         }

@@ -20,11 +20,13 @@ import {
 } from '@/lib/api/conversations';
 import {
   getMessages,
+  sendAttachmentMessage,
   sendMessage as sendMessageApi,
   toggleReaction as toggleReactionApi,
   type Message,
   type MessageReaction,
 } from '@/lib/api/messages';
+import { uploadFile } from '@/lib/api/uploads';
 import { useAuth } from '@/lib/auth/auth-context';
 import { createChatConnection } from '@/lib/signalr/connection';
 
@@ -46,6 +48,7 @@ type ChatContextValue = {
   typingUser: string | null;
   selectConversation: (conversationId: number) => void;
   sendMessage: (content: string) => Promise<void>;
+  sendAttachment: (file: File, caption: string) => Promise<void>;
   loadOlderMessages: () => Promise<void>;
   startDirectConversation: (userId: number) => Promise<Conversation>;
   startGroupConversation: (participantUserIds: number[], name: string) => Promise<Conversation>;
@@ -254,6 +257,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [activeConversationId, token]
   );
 
+  const sendAttachment = useCallback(
+    async (file: File, caption: string) => {
+      if (activeConversationId === null || !token) {
+        return;
+      }
+      const uploaded = await uploadFile(file, token);
+      const type = file.type.startsWith('image/') ? 'Image' : 'File';
+      await sendAttachmentMessage(
+        activeConversationId,
+        caption,
+        type,
+        uploaded.url,
+        uploaded.fileName,
+        uploaded.sizeBytes,
+        token
+      );
+    },
+    [activeConversationId, token]
+  );
+
   const startDirectConversation = useCallback(
     async (userId: number) => {
       if (!token) {
@@ -318,6 +341,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         typingUser,
         selectConversation,
         sendMessage: send,
+        sendAttachment,
         loadOlderMessages,
         startDirectConversation,
         startGroupConversation,

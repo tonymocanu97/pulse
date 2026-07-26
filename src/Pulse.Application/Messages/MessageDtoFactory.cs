@@ -18,6 +18,9 @@ namespace Pulse.Application.Messages
                 message.IsEdited,
                 message.Reactions
                     .Select(r => new MessageReactionDto(r.Id, r.UserId, r.User.Username, r.Emoji))
-                    .ToList());
+                    .ToList(),
+                message.AttachmentUrl,
+                message.AttachmentFileName,
+                message.AttachmentSizeBytes);
     }
 }

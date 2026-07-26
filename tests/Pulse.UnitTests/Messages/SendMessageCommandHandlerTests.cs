@@ -78,5 +78,41 @@ namespace Pulse.UnitTests.Messages
             _conversationRepository.Verify(
                 r => r.IsParticipantAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
         }
+
+        [Fact]
+        public async Task Handle_ImageWithAttachment_PersistsWithEmptyCaption()
+        {
+            _conversationRepository
+                .Setup(r => r.IsParticipantAsync(1, 1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+            _userRepository.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(_sender);
+
+            var command = new SendMessageCommand(1, 1, "", MessageType.Image, "/uploads/abc.png", "photo.png", 1024);
+
+            var (response, error) = await _handler.Handle(command, CancellationToken.None);
+
+            error.Should().BeNull();
+            response.Should().NotBeNull();
+            response!.AttachmentUrl.Should().Be("/uploads/abc.png");
+            response.AttachmentFileName.Should().Be("photo.png");
+            response.AttachmentSizeBytes.Should().Be(1024);
+
+            _messageRepository.Verify(
+                r => r.AddAsync(It.Is<Message>(m => m.AttachmentUrl == "/uploads/abc.png"), It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task Handle_ImageWithoutAttachment_ReturnsError()
+        {
+            var command = new SendMessageCommand(1, 1, "", MessageType.Image);
+
+            var (response, error) = await _handler.Handle(command, CancellationToken.None);
+
+            response.Should().BeNull();
+            error.Should().Be(SendMessageError.MissingAttachment);
+
+            _messageRepository.Verify(r => r.AddAsync(It.IsAny<Message>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
     }
 }

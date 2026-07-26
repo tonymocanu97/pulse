@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import type { MessageReaction } from '@/lib/api/messages';
+import { API_ORIGIN } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useChat } from '@/lib/chat/chat-context';
 
@@ -14,6 +15,12 @@ function groupReactions(reactions: MessageReaction[]): [string, MessageReaction[
     groups.set(reaction.emoji, group);
   }
   return Array.from(groups.entries());
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export function MessageList() {
@@ -88,11 +95,41 @@ export function MessageList() {
               {!isOwn && <span className="text-xs text-muted-foreground">{message.senderUsername}</span>}
               <div className="relative">
                 <div
-                  className={`max-w-md rounded-lg px-3 py-2 text-sm ${
+                  className={`max-w-md rounded-lg text-sm ${message.type === 'Text' ? 'px-3 py-2' : 'p-2'} ${
                     isOwn ? 'bg-primary text-primary-foreground' : 'bg-surface'
                   }`}
                 >
-                  {message.content}
+                  {message.type === 'Text' && message.content}
+
+                  {message.type === 'Image' && message.attachmentUrl && (
+                    <img
+                      src={`${API_ORIGIN}${message.attachmentUrl}`}
+                      alt={message.attachmentFileName ?? 'Shared image'}
+                      className="max-h-80 rounded-md"
+                    />
+                  )}
+
+                  {message.type === 'File' && message.attachmentUrl && (
+                    <a
+                      href={`${API_ORIGIN}${message.attachmentUrl}`}
+                      download={message.attachmentFileName ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:underline"
+                    >
+                      <span>📄</span>
+                      <span className="flex flex-col">
+                        <span className="font-medium">{message.attachmentFileName}</span>
+                        {message.attachmentSizeBytes !== null && (
+                          <span className="text-xs opacity-75">{formatFileSize(message.attachmentSizeBytes)}</span>
+                        )}
+                      </span>
+                    </a>
+                  )}
+
+                  {message.type !== 'Text' && message.content && (
+                    <p className="mt-1 px-1">{message.content}</p>
+                  )}
                 </div>
 
                 {openPickerFor === message.id && (

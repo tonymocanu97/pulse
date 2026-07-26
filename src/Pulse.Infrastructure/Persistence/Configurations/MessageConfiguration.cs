@@ -10,6 +10,8 @@ namespace Pulse.Infrastructure.Persistence.Configurations
         {
             builder.Property(m => m.Content).IsRequired().HasMaxLength(4000);
             builder.Property(m => m.Type).HasConversion<string>().HasMaxLength(20);
+            builder.Property(m => m.AttachmentUrl).HasMaxLength(500);
+            builder.Property(m => m.AttachmentFileName).HasMaxLength(255);
 
             builder.HasOne(m => m.Sender)
                 .WithMany()

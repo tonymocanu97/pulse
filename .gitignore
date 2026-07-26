@@ -21,6 +21,9 @@ obj/
 *.log
 logs/
 
+# Locally uploaded chat attachments (dev-only disk storage)
+src/Pulse.API/wwwroot/uploads/
+
 ## Node / Frontend
 node_modules/
 dist/

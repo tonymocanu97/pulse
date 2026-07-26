@@ -17,6 +17,10 @@ namespace Pulse.Domain.Entities
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
         public bool IsEdited { get; set; }
 
+        public string? AttachmentUrl { get; set; }
+        public string? AttachmentFileName { get; set; }
+        public long? AttachmentSizeBytes { get; set; }
+
         public ICollection<MessageReaction> Reactions { get; set; } = [];
     }
 }

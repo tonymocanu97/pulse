@@ -19,6 +19,9 @@ export type Message = {
   sentAt: string;
   isEdited: boolean;
   reactions: MessageReaction[];
+  attachmentUrl: string | null;
+  attachmentFileName: string | null;
+  attachmentSizeBytes: number | null;
 };
 
 export function getMessages(
@@ -38,6 +41,22 @@ export function sendMessage(conversationId: number, content: string, token: stri
     method: 'POST',
     token,
     body: { content, type: 'Text' satisfies MessageType },
+  });
+}
+
+export function sendAttachmentMessage(
+  conversationId: number,
+  caption: string,
+  type: Exclude<MessageType, 'Text'>,
+  attachmentUrl: string,
+  attachmentFileName: string,
+  attachmentSizeBytes: number,
+  token: string
+): Promise<Message> {
+  return apiFetch<Message>(`/conversations/${conversationId}/messages`, {
+    method: 'POST',
+    token,
+    body: { content: caption, type, attachmentUrl, attachmentFileName, attachmentSizeBytes },
   });
 }
 

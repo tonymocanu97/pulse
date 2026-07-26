@@ -1,11 +1,13 @@
-import { useState, type KeyboardEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 
 import { useChat } from '@/lib/chat/chat-context';
 
 export function MessageComposer() {
-  const { sendMessage, notifyTyping, activeConversationId } = useChat();
+  const { sendMessage, sendAttachment, notifyTyping, activeConversationId } = useChat();
   const [content, setContent] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (activeConversationId === null) {
     return null;
@@ -26,6 +28,22 @@ export function MessageComposer() {
     }
   };
 
+  const handleFileSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      await sendAttachment(file, content.trim());
+      setContent('');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -35,6 +53,21 @@ export function MessageComposer() {
 
   return (
     <div className="flex items-end gap-2 border-t border-border px-4 py-3">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.txt,.doc,.docx,.zip"
+        className="hidden"
+        onChange={e => void handleFileSelected(e)}
+      />
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isUploading}
+        title="Attach a file"
+        className="h-11 w-11 shrink-0 rounded-md border border-border text-lg hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {isUploading ? '...' : '📎'}
+      </button>
       <textarea
         rows={1}
         value={content}

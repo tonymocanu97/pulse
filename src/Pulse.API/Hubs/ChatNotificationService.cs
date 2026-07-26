@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Pulse.Application.Common.Interfaces;
+using Pulse.Application.Conversations.DTOs;
+using Pulse.Application.Messages.DTOs;
 
 namespace Pulse.API.Hubs
 {
@@ -11,5 +13,13 @@ namespace Pulse.API.Hubs
                 userId,
                 lastSeen,
                 cancellationToken: ct);
+
+        public Task MessageReceived(int conversationId, MessageDto message, CancellationToken ct = default) =>
+            hubContext.Clients.Group(ChatHub.ConversationGroupName(conversationId))
+                .SendAsync("MessageReceived", message, cancellationToken: ct);
+
+        public Task ConversationCreated(IReadOnlyList<int> participantUserIds, ConversationDto conversation, CancellationToken ct = default) =>
+            hubContext.Clients.Groups(participantUserIds.Select(ChatHub.UserGroupName).ToList())
+                .SendAsync("ConversationCreated", conversation, cancellationToken: ct);
     }
 }

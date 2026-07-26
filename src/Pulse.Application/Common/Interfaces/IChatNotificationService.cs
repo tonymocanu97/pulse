@@ -1,4 +1,6 @@
 using Pulse.Application.Auth.DTOs;
+using Pulse.Application.Conversations.DTOs;
+using Pulse.Application.Messages.DTOs;
 
 namespace Pulse.Application.Common.Interfaces
 {
@@ -7,5 +9,9 @@ namespace Pulse.Application.Common.Interfaces
     public interface IChatNotificationService
     {
         Task UserOnlineChanged(int userId, bool isOnline, DateTime? lastSeen, CancellationToken ct = default);
+
+        Task MessageReceived(int conversationId, MessageDto message, CancellationToken ct = default);
+
+        Task ConversationCreated(IReadOnlyList<int> participantUserIds, ConversationDto conversation, CancellationToken ct = default);
     }
 }

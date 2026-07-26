@@ -1,35 +1,12 @@
-import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
-import { useEffect, useState } from 'react';
-
+import { ConversationList } from '@/components/chat/ConversationList';
+import { MessageComposer } from '@/components/chat/MessageComposer';
+import { MessageList } from '@/components/chat/MessageList';
 import { useAuth } from '@/lib/auth/auth-context';
-import { createChatConnection } from '@/lib/signalr/connection';
+import { ChatProvider, useChat } from '@/lib/chat/chat-context';
 
-export function ChatPage() {
-  const { user, token, logout } = useAuth();
-  const [connectionState, setConnectionState] = useState<HubConnectionState>(
-    HubConnectionState.Disconnected
-  );
-
-  useEffect(() => {
-    if (!token) {
-      return;
-    }
-
-    const connection: HubConnection = createChatConnection(token);
-
-    connection.onreconnecting(() => setConnectionState(HubConnectionState.Reconnecting));
-    connection.onreconnected(() => setConnectionState(HubConnectionState.Connected));
-    connection.onclose(() => setConnectionState(HubConnectionState.Disconnected));
-
-    connection
-      .start()
-      .then(() => setConnectionState(HubConnectionState.Connected))
-      .catch(() => setConnectionState(HubConnectionState.Disconnected));
-
-    return () => {
-      void connection.stop();
-    };
-  }, [token]);
+function ChatLayout() {
+  const { user, logout } = useAuth();
+  const { connectionState } = useChat();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -48,9 +25,21 @@ export function ChatPage() {
         </button>
       </header>
 
-      <main className="flex flex-1 items-center justify-center text-muted-foreground">
-        <p>No conversations yet.</p>
-      </main>
+      <div className="flex flex-1 overflow-hidden">
+        <ConversationList />
+        <main className="flex flex-1 flex-col overflow-hidden">
+          <MessageList />
+          <MessageComposer />
+        </main>
+      </div>
     </div>
+  );
+}
+
+export function ChatPage() {
+  return (
+    <ChatProvider>
+      <ChatLayout />
+    </ChatProvider>
   );
 }

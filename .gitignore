@@ -1,0 +1,29 @@
+## .NET / Visual Studio
+
+# Build results
+bin/
+obj/
+
+# Visual Studio cache/options
+.vs/
+
+# User-specific files
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+logs/
+
+## Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env.local

@@ -18,7 +18,13 @@ import {
   getConversations,
   type Conversation,
 } from '@/lib/api/conversations';
-import { getMessages, sendMessage as sendMessageApi, type Message } from '@/lib/api/messages';
+import {
+  getMessages,
+  sendMessage as sendMessageApi,
+  toggleReaction as toggleReactionApi,
+  type Message,
+  type MessageReaction,
+} from '@/lib/api/messages';
 import { useAuth } from '@/lib/auth/auth-context';
 import { createChatConnection } from '@/lib/signalr/connection';
 
@@ -44,6 +50,7 @@ type ChatContextValue = {
   startDirectConversation: (userId: number) => Promise<Conversation>;
   startGroupConversation: (participantUserIds: number[], name: string) => Promise<Conversation>;
   notifyTyping: () => void;
+  toggleReaction: (messageId: number, emoji: string) => Promise<void>;
 };
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -110,6 +117,22 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     connection.on('ConversationCreated', (conversation: Conversation) => {
       setConversations(prev => (prev.some(c => c.id === conversation.id) ? prev : [conversation, ...prev]));
+    });
+
+    connection.on('MessageReactionChanged', (conversationId: number, messageId: number, reactions: MessageReaction[]) => {
+      setMessagesByConversation(prev => {
+        const existing = prev[conversationId];
+        if (!existing) {
+          return prev;
+        }
+        return {
+          ...prev,
+          [conversationId]: {
+            ...existing,
+            messages: existing.messages.map(m => (m.id === messageId ? { ...m, reactions } : m)),
+          },
+        };
+      });
     });
 
     connection.on('ConversationRead', (conversationId: number, userId: number, readAt: string) => {
@@ -257,6 +280,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [token, selectConversation]
   );
 
+  const toggleReactionOnMessage = useCallback(
+    async (messageId: number, emoji: string) => {
+      if (activeConversationId === null || !token) {
+        return;
+      }
+      await toggleReactionApi(activeConversationId, messageId, emoji, token);
+    },
+    [activeConversationId, token]
+  );
+
   const notifyTyping = useCallback(() => {
     if (activeConversationId !== null) {
       void connectionRef.current?.invoke('SendTypingIndicator', activeConversationId);
@@ -289,6 +322,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         startDirectConversation,
         startGroupConversation,
         notifyTyping,
+        toggleReaction: toggleReactionOnMessage,
       }}
     >
       {children}

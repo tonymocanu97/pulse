@@ -15,5 +15,8 @@ namespace Pulse.Application.Common.Interfaces
         Task ConversationCreated(IReadOnlyList<int> participantUserIds, ConversationDto conversation, CancellationToken ct = default);
 
         Task ConversationRead(int conversationId, int userId, DateTime readAt, CancellationToken ct = default);
+
+        Task MessageReactionChanged(
+            int conversationId, int messageId, IReadOnlyList<MessageReactionDto> reactions, CancellationToken ct = default);
     }
 }

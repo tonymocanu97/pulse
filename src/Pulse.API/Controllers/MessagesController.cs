@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.Application.Messages.Commands.SendMessage;
+using Pulse.Application.Messages.Commands.ToggleMessageReaction;
 using Pulse.Application.Messages.DTOs;
 using Pulse.Application.Messages.Queries.GetMessageHistory;
 
@@ -32,6 +33,22 @@ namespace Pulse.API.Controllers
             {
                 SendMessageError.EmptyContent => BadRequest("Message content cannot be empty."),
                 SendMessageError.NotParticipant => Forbid(),
+                _ => Ok(response)
+            };
+        }
+
+        [HttpPost("{messageId:int}/reactions")]
+        public async Task<ActionResult<IReadOnlyList<MessageReactionDto>>> ToggleReaction(
+            int conversationId, int messageId, ToggleReactionRequest request, CancellationToken ct)
+        {
+            var (response, error) = await mediator.Send(
+                new ToggleMessageReactionCommand(messageId, CurrentUserId, request.Emoji), ct);
+
+            return error switch
+            {
+                ToggleReactionError.EmptyEmoji => BadRequest("Emoji is required."),
+                ToggleReactionError.MessageNotFound => NotFound(),
+                ToggleReactionError.NotParticipant => Forbid(),
                 _ => Ok(response)
             };
         }

@@ -13,6 +13,11 @@ namespace Pulse.Application.Common.Interfaces.Repositories
             CancellationToken ct = default);
 
         Task AddAsync(Message message, CancellationToken ct = default);
+
+        Task<MessageReaction?> GetReactionAsync(int messageId, int userId, string emoji, CancellationToken ct = default);
+        Task AddReactionAsync(MessageReaction reaction, CancellationToken ct = default);
+        void RemoveReaction(MessageReaction reaction);
+
         Task SaveChangesAsync(CancellationToken ct = default);
     }
 }

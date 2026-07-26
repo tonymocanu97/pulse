@@ -15,6 +15,9 @@ namespace Pulse.Application.Messages
                 message.Content,
                 message.Type,
                 message.SentAt,
-                message.IsEdited);
+                message.IsEdited,
+                message.Reactions
+                    .Select(r => new MessageReactionDto(r.Id, r.UserId, r.User.Username, r.Emoji))
+                    .ToList());
     }
 }

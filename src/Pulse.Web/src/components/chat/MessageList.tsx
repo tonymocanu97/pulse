@@ -1,7 +1,20 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import type { MessageReaction } from '@/lib/api/messages';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useChat } from '@/lib/chat/chat-context';
+
+const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+function groupReactions(reactions: MessageReaction[]): [string, MessageReaction[]][] {
+  const groups = new Map<string, MessageReaction[]>();
+  for (const reaction of reactions) {
+    const group = groups.get(reaction.emoji) ?? [];
+    group.push(reaction);
+    groups.set(reaction.emoji, group);
+  }
+  return Array.from(groups.entries());
+}
 
 export function MessageList() {
   const { user } = useAuth();
@@ -12,9 +25,11 @@ export function MessageList() {
     loadOlderMessages,
     activeConversationId,
     typingUser,
+    toggleReaction,
   } = useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageIdRef = useRef<number | null>(null);
+  const [openPickerFor, setOpenPickerFor] = useState<number | null>(null);
 
   useEffect(() => {
     lastMessageIdRef.current = null;
@@ -66,16 +81,66 @@ export function MessageList() {
             otherParticipant?.lastReadAt !== undefined &&
             new Date(otherParticipant.lastReadAt) >= new Date(message.sentAt);
 
+          const reactionGroups = groupReactions(message.reactions);
+
           return (
             <div key={message.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
               {!isOwn && <span className="text-xs text-muted-foreground">{message.senderUsername}</span>}
-              <div
-                className={`max-w-md rounded-lg px-3 py-2 text-sm ${
-                  isOwn ? 'bg-primary text-primary-foreground' : 'bg-surface'
-                }`}
-              >
-                {message.content}
+              <div className="relative">
+                <div
+                  className={`max-w-md rounded-lg px-3 py-2 text-sm ${
+                    isOwn ? 'bg-primary text-primary-foreground' : 'bg-surface'
+                  }`}
+                >
+                  {message.content}
+                </div>
+
+                {openPickerFor === message.id && (
+                  <div
+                    className={`absolute z-10 flex gap-1 rounded-md border border-border bg-surface p-1 shadow-md ${
+                      isOwn ? 'right-0' : 'left-0'
+                    } top-full mt-1`}
+                  >
+                    {QUICK_REACTIONS.map(emoji => (
+                      <button
+                        key={emoji}
+                        onClick={() => {
+                          void toggleReaction(message.id, emoji);
+                          setOpenPickerFor(null);
+                        }}
+                        className="rounded px-1 hover:scale-125"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              <div className={`mt-0.5 flex flex-wrap items-center gap-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                {reactionGroups.map(([emoji, group]) => {
+                  const reactedByMe = group.some(r => r.userId === user.id);
+                  return (
+                    <button
+                      key={emoji}
+                      onClick={() => void toggleReaction(message.id, emoji)}
+                      title={group.map(r => r.username).join(', ')}
+                      className={`rounded-full border px-1.5 py-0.5 text-xs ${
+                        reactedByMe ? 'border-primary bg-primary/20' : 'border-border bg-surface'
+                      }`}
+                    >
+                      {emoji} {group.length}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setOpenPickerFor(current => (current === message.id ? null : message.id))}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  +
+                </button>
+              </div>
+
               {isOwn && otherParticipant && (
                 <span className={`text-xs ${isRead ? 'text-primary' : 'text-muted-foreground'}`}>
                   {isRead ? '✓✓ Seen' : '✓ Sent'}

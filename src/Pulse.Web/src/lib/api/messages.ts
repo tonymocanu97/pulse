@@ -1,6 +1,13 @@
 import type { MessageType } from '@/lib/api/conversations';
 import { apiFetch } from '@/lib/api-client';
 
+export type MessageReaction = {
+  id: number;
+  userId: number;
+  username: string;
+  emoji: string;
+};
+
 export type Message = {
   id: number;
   conversationId: number;
@@ -11,6 +18,7 @@ export type Message = {
   type: MessageType;
   sentAt: string;
   isEdited: boolean;
+  reactions: MessageReaction[];
 };
 
 export function getMessages(
@@ -30,5 +38,18 @@ export function sendMessage(conversationId: number, content: string, token: stri
     method: 'POST',
     token,
     body: { content, type: 'Text' satisfies MessageType },
+  });
+}
+
+export function toggleReaction(
+  conversationId: number,
+  messageId: number,
+  emoji: string,
+  token: string
+): Promise<MessageReaction[]> {
+  return apiFetch<MessageReaction[]>(`/conversations/${conversationId}/messages/${messageId}/reactions`, {
+    method: 'POST',
+    token,
+    body: { emoji },
   });
 }

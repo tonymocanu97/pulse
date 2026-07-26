@@ -12,7 +12,12 @@ import {
   type ReactNode,
 } from 'react';
 
-import { createDirectConversation, getConversations, type Conversation } from '@/lib/api/conversations';
+import {
+  createDirectConversation,
+  createGroupConversation,
+  getConversations,
+  type Conversation,
+} from '@/lib/api/conversations';
 import { getMessages, sendMessage as sendMessageApi, type Message } from '@/lib/api/messages';
 import { useAuth } from '@/lib/auth/auth-context';
 import { createChatConnection } from '@/lib/signalr/connection';
@@ -36,6 +41,7 @@ type ChatContextValue = {
   sendMessage: (content: string) => Promise<void>;
   loadOlderMessages: () => Promise<void>;
   startDirectConversation: (userId: number) => Promise<Conversation>;
+  startGroupConversation: (participantUserIds: number[], name: string) => Promise<Conversation>;
   notifyTyping: () => void;
 };
 
@@ -222,6 +228,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [token, selectConversation]
   );
 
+  const startGroupConversation = useCallback(
+    async (participantUserIds: number[], name: string) => {
+      if (!token) {
+        throw new Error('Not authenticated.');
+      }
+      const conversation = await createGroupConversation(participantUserIds, name, token);
+      setConversations(prev => (prev.some(c => c.id === conversation.id) ? prev : [conversation, ...prev]));
+      selectConversation(conversation.id);
+      return conversation;
+    },
+    [token, selectConversation]
+  );
+
   const notifyTyping = useCallback(() => {
     if (activeConversationId !== null) {
       void connectionRef.current?.invoke('SendTypingIndicator', activeConversationId);
@@ -248,6 +267,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         sendMessage: send,
         loadOlderMessages,
         startDirectConversation,
+        startGroupConversation,
         notifyTyping,
       }}
     >

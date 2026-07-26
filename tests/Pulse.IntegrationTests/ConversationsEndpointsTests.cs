@@ -79,5 +79,55 @@ namespace Pulse.IntegrationTests
 
             response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         }
+
+        [Fact]
+        public async Task CreateGroupConversation_WithThreeUsers_AppearsInAllListsWithName()
+        {
+            var aliceClient = factory.CreateClient();
+            var alice = await TestDataHelper.RegisterAsync(aliceClient);
+            Authenticate(aliceClient, alice.Token);
+
+            var bobClient = factory.CreateClient();
+            var bob = await TestDataHelper.RegisterAsync(bobClient);
+            Authenticate(bobClient, bob.Token);
+
+            var carolClient = factory.CreateClient();
+            var carol = await TestDataHelper.RegisterAsync(carolClient);
+            Authenticate(carolClient, carol.Token);
+
+            var createResponse = await aliceClient.PostAsJsonAsync(
+                "/api/conversations", new CreateConversationRequest([bob.User.Id, carol.User.Id], "Design Guild", true));
+
+            createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            var conversation = await createResponse.Content.ReadFromJsonAsync<ConversationDto>();
+            conversation!.IsGroup.Should().BeTrue();
+            conversation.Name.Should().Be("Design Guild");
+            conversation.Participants.Should().HaveCount(3);
+
+            var bobList = await bobClient.GetFromJsonAsync<List<ConversationDto>>("/api/conversations");
+            bobList!.Should().ContainSingle(c => c.Id == conversation.Id);
+
+            var carolList = await carolClient.GetFromJsonAsync<List<ConversationDto>>("/api/conversations");
+            carolList!.Should().ContainSingle(c => c.Id == conversation.Id);
+        }
+
+        [Fact]
+        public async Task CreateGroupConversation_WithoutName_ReturnsConflict()
+        {
+            var aliceClient = factory.CreateClient();
+            var alice = await TestDataHelper.RegisterAsync(aliceClient);
+            Authenticate(aliceClient, alice.Token);
+
+            var bobClient = factory.CreateClient();
+            var bob = await TestDataHelper.RegisterAsync(bobClient);
+
+            var carolClient = factory.CreateClient();
+            var carol = await TestDataHelper.RegisterAsync(carolClient);
+
+            var response = await aliceClient.PostAsJsonAsync(
+                "/api/conversations", new CreateConversationRequest([bob.User.Id, carol.User.Id], null, true));
+
+            response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        }
     }
 }

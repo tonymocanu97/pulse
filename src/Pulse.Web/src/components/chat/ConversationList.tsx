@@ -1,9 +1,12 @@
 import { useState } from 'react';
 
 import { NewConversationSearch } from '@/components/chat/NewConversationSearch';
+import { NewGroupDialog } from '@/components/chat/NewGroupDialog';
 import type { Conversation } from '@/lib/api/conversations';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useChat } from '@/lib/chat/chat-context';
+
+type Panel = 'none' | 'direct' | 'group';
 
 function getOtherParticipant(conversation: Conversation, currentUserId: number) {
   return conversation.participants.find(p => p.userId !== currentUserId);
@@ -14,6 +17,15 @@ function getDisplayName(conversation: Conversation, currentUserId: number): stri
     return conversation.name ?? 'Group chat';
   }
   return getOtherParticipant(conversation, currentUserId)?.username ?? 'Unknown user';
+}
+
+function getLastMessagePreview(conversation: Conversation): string {
+  if (!conversation.lastMessage) {
+    return 'No messages yet';
+  }
+  return conversation.isGroup
+    ? `${conversation.lastMessage.senderUsername}: ${conversation.lastMessage.content}`
+    : conversation.lastMessage.content;
 }
 
 function formatTimestamp(iso: string): string {
@@ -27,25 +39,36 @@ function formatTimestamp(iso: string): string {
 export function ConversationList() {
   const { user } = useAuth();
   const { conversations, activeConversationId, selectConversation } = useChat();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [panel, setPanel] = useState<Panel>('none');
 
   if (!user) {
     return null;
   }
 
+  const togglePanel = (next: Panel) => setPanel(current => (current === next ? 'none' : next));
+
   return (
     <aside className="flex w-72 shrink-0 flex-col border-r border-border">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Chats</h2>
-        <button
-          onClick={() => setIsSearchOpen(open => !open)}
-          className="rounded-md border border-border px-2 py-1 text-xs hover:bg-surface"
-        >
-          {isSearchOpen ? 'Cancel' : 'New chat'}
-        </button>
+        <div className="flex gap-1.5">
+          <button
+            onClick={() => togglePanel('direct')}
+            className="rounded-md border border-border px-2 py-1 text-xs hover:bg-surface"
+          >
+            {panel === 'direct' ? 'Cancel' : 'New chat'}
+          </button>
+          <button
+            onClick={() => togglePanel('group')}
+            className="rounded-md border border-border px-2 py-1 text-xs hover:bg-surface"
+          >
+            {panel === 'group' ? 'Cancel' : 'New group'}
+          </button>
+        </div>
       </div>
 
-      {isSearchOpen && <NewConversationSearch onStarted={() => setIsSearchOpen(false)} />}
+      {panel === 'direct' && <NewConversationSearch onStarted={() => setPanel('none')} />}
+      {panel === 'group' && <NewGroupDialog onStarted={() => setPanel('none')} />}
 
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 && (
@@ -53,7 +76,7 @@ export function ConversationList() {
         )}
 
         {conversations.map(conversation => {
-          const other = getOtherParticipant(conversation, user.id);
+          const other = conversation.isGroup ? undefined : getOtherParticipant(conversation, user.id);
           const isActive = conversation.id === activeConversationId;
 
           return (
@@ -81,9 +104,7 @@ export function ConversationList() {
                   </span>
                 )}
               </div>
-              <span className="truncate text-xs text-muted-foreground">
-                {conversation.lastMessage?.content ?? 'No messages yet'}
-              </span>
+              <span className="truncate text-xs text-muted-foreground">{getLastMessagePreview(conversation)}</span>
             </button>
           );
         })}

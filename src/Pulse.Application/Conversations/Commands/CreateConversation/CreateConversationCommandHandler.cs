@@ -29,7 +29,22 @@ namespace Pulse.Application.Conversations.Commands.CreateConversation
                 }
             }
 
-            if (!request.IsGroup)
+            string? groupName = null;
+
+            if (request.IsGroup)
+            {
+                groupName = request.Name?.Trim();
+                if (string.IsNullOrEmpty(groupName))
+                {
+                    return (null, "A group conversation requires a name.");
+                }
+
+                if (participantIds.Count < 3)
+                {
+                    return (null, "A group conversation requires at least two other participants.");
+                }
+            }
+            else
             {
                 if (participantIds.Count != 2)
                 {
@@ -46,7 +61,7 @@ namespace Pulse.Application.Conversations.Commands.CreateConversation
             var conversation = new Conversation
             {
                 IsGroup = request.IsGroup,
-                Name = request.IsGroup ? request.Name : null,
+                Name = groupName,
                 Participants = participantIds.Select(userId => new Participant { UserId = userId }).ToList()
             };
 

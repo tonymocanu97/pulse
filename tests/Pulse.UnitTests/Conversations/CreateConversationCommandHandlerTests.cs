@@ -102,5 +102,72 @@ namespace Pulse.UnitTests.Conversations
 
             _conversationRepository.Verify(r => r.AddAsync(It.IsAny<Conversation>(), It.IsAny<CancellationToken>()), Times.Never);
         }
+
+        [Fact]
+        public async Task Handle_GroupWithoutName_ReturnsErrorWithoutCreating()
+        {
+            var third = new User { Id = 3, Username = "carol", Email = "carol@example.com" };
+            _userRepository.Setup(r => r.GetByIdAsync(3, It.IsAny<CancellationToken>())).ReturnsAsync(third);
+
+            var command = new CreateConversationCommand(1, [2, 3], null, true);
+
+            var (response, error) = await _handler.Handle(command, CancellationToken.None);
+
+            response.Should().BeNull();
+            error.Should().Contain("name");
+
+            _conversationRepository.Verify(r => r.AddAsync(It.IsAny<Conversation>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Handle_GroupWithFewerThanThreeParticipants_ReturnsErrorWithoutCreating()
+        {
+            var command = new CreateConversationCommand(1, [2], "Just us two", true);
+
+            var (response, error) = await _handler.Handle(command, CancellationToken.None);
+
+            response.Should().BeNull();
+            error.Should().NotBeNullOrEmpty();
+
+            _conversationRepository.Verify(r => r.AddAsync(It.IsAny<Conversation>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Handle_ValidGroup_CreatesAndBroadcasts()
+        {
+            var third = new User { Id = 3, Username = "carol", Email = "carol@example.com" };
+            _userRepository.Setup(r => r.GetByIdAsync(3, It.IsAny<CancellationToken>())).ReturnsAsync(third);
+
+            var populated = new Conversation
+            {
+                Id = 7,
+                IsGroup = true,
+                Name = "Design Guild",
+                Participants =
+                [
+                    new Participant { UserId = 1, User = _creator },
+                    new Participant { UserId = 2, User = _other },
+                    new Participant { UserId = 3, User = third }
+                ]
+            };
+            _conversationRepository
+                .Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(populated);
+
+            var command = new CreateConversationCommand(1, [2, 3], "Design Guild", true);
+
+            var (response, error) = await _handler.Handle(command, CancellationToken.None);
+
+            error.Should().BeNull();
+            response.Should().NotBeNull();
+            response!.IsGroup.Should().BeTrue();
+            response.Name.Should().Be("Design Guild");
+            response.Participants.Should().HaveCount(3);
+
+            _conversationRepository.Verify(
+                r => r.FindDirectConversationAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+            _conversationRepository.Verify(r => r.AddAsync(It.IsAny<Conversation>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 }

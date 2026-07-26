@@ -43,3 +43,15 @@ export function createDirectConversation(participantUserId: number, token: strin
     body: { participantUserIds: [participantUserId], name: null, isGroup: false },
   });
 }
+
+export function createGroupConversation(
+  participantUserIds: number[],
+  name: string,
+  token: string
+): Promise<Conversation> {
+  return apiFetch<Conversation>('/conversations', {
+    method: 'POST',
+    token,
+    body: { participantUserIds, name, isGroup: true },
+  });
+}

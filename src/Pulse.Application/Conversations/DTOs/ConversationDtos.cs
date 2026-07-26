@@ -2,7 +2,7 @@ using Pulse.Domain.Enums;
 
 namespace Pulse.Application.Conversations.DTOs
 {
-    public record ParticipantDto(int UserId, string Username, string? AvatarUrl, bool IsOnline, DateTime? LastSeen);
+    public record ParticipantDto(int UserId, string Username, string? AvatarUrl, bool IsOnline, DateTime? LastSeen, DateTime? LastReadAt);
 
     public record MessageSummaryDto(int Id, int SenderId, string SenderUsername, string Content, MessageType Type, DateTime SentAt);
 

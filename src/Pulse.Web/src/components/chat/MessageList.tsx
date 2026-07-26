@@ -5,7 +5,14 @@ import { useChat } from '@/lib/chat/chat-context';
 
 export function MessageList() {
   const { user } = useAuth();
-  const { activeMessages, hasMoreMessages, loadOlderMessages, activeConversationId, typingUser } = useChat();
+  const {
+    activeConversation,
+    activeMessages,
+    hasMoreMessages,
+    loadOlderMessages,
+    activeConversationId,
+    typingUser,
+  } = useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastMessageIdRef = useRef<number | null>(null);
 
@@ -34,6 +41,11 @@ export function MessageList() {
     );
   }
 
+  const otherParticipant =
+    activeConversation && !activeConversation.isGroup
+      ? activeConversation.participants.find(p => p.userId !== user.id)
+      : undefined;
+
   return (
     <div className="flex flex-1 flex-col overflow-y-auto px-4 py-4">
       {hasMoreMessages && (
@@ -48,6 +60,12 @@ export function MessageList() {
       <div className="flex flex-col gap-2">
         {activeMessages.map(message => {
           const isOwn = message.senderId === user.id;
+          const isRead =
+            isOwn &&
+            otherParticipant?.lastReadAt !== null &&
+            otherParticipant?.lastReadAt !== undefined &&
+            new Date(otherParticipant.lastReadAt) >= new Date(message.sentAt);
+
           return (
             <div key={message.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
               {!isOwn && <span className="text-xs text-muted-foreground">{message.senderUsername}</span>}
@@ -58,6 +76,11 @@ export function MessageList() {
               >
                 {message.content}
               </div>
+              {isOwn && otherParticipant && (
+                <span className={`text-xs ${isRead ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {isRead ? '✓✓ Seen' : '✓ Sent'}
+                </span>
+              )}
             </div>
           );
         })}

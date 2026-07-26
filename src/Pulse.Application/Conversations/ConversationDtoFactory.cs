@@ -13,7 +13,7 @@ namespace Pulse.Application.Conversations
                 .FirstOrDefault();
 
             var participants = conversation.Participants
-                .Select(p => new ParticipantDto(p.UserId, p.User.Username, p.User.AvatarUrl, p.User.IsOnline, p.User.LastSeen))
+                .Select(p => new ParticipantDto(p.UserId, p.User.Username, p.User.AvatarUrl, p.User.IsOnline, p.User.LastSeen, p.LastReadAt))
                 .ToList();
 
             return new ConversationDto(conversation.Id, conversation.Name, conversation.IsGroup, conversation.CreatedAt, participants, lastMessage);

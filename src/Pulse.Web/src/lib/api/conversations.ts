@@ -8,6 +8,7 @@ export type Participant = {
   avatarUrl: string | null;
   isOnline: boolean;
   lastSeen: string | null;
+  lastReadAt: string | null;
 };
 
 export type MessageSummary = {

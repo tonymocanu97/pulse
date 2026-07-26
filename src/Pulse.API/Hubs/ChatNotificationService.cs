@@ -21,5 +21,9 @@ namespace Pulse.API.Hubs
         public Task ConversationCreated(IReadOnlyList<int> participantUserIds, ConversationDto conversation, CancellationToken ct = default) =>
             hubContext.Clients.Groups(participantUserIds.Select(ChatHub.UserGroupName).ToList())
                 .SendAsync("ConversationCreated", conversation, cancellationToken: ct);
+
+        public Task ConversationRead(int conversationId, int userId, DateTime readAt, CancellationToken ct = default) =>
+            hubContext.Clients.Group(ChatHub.ConversationGroupName(conversationId))
+                .SendAsync("ConversationRead", conversationId, userId, readAt, cancellationToken: ct);
     }
 }

@@ -33,6 +33,7 @@ type ConversationMessages = {
 type ChatContextValue = {
   conversations: Conversation[];
   activeConversationId: number | null;
+  activeConversation: Conversation | null;
   activeMessages: Message[];
   hasMoreMessages: boolean;
   connectionState: HubConnectionState;
@@ -70,6 +71,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     connectionRef.current = connection;
 
     connection.on('MessageReceived', (message: Message) => {
+      if (message.conversationId === activeConversationIdRef.current) {
+        void connection.invoke('MarkAsRead', message.conversationId);
+      }
+
       setMessagesByConversation(prev => {
         const existing = prev[message.conversationId];
         if (existing?.messages.some(m => m.id === message.id)) {
@@ -105,6 +110,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     connection.on('ConversationCreated', (conversation: Conversation) => {
       setConversations(prev => (prev.some(c => c.id === conversation.id) ? prev : [conversation, ...prev]));
+    });
+
+    connection.on('ConversationRead', (conversationId: number, userId: number, readAt: string) => {
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === conversationId
+            ? { ...c, participants: c.participants.map(p => (p.userId === userId ? { ...p, lastReadAt: readAt } : p)) }
+            : c
+        )
+      );
     });
 
     const updatePresence = (userId: number, isOnline: boolean, lastSeen: string | null) => {
@@ -185,6 +200,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       if (connection) {
         void connection.invoke('JoinConversation', conversationId);
+        void connection.invoke('MarkAsRead', conversationId);
       }
 
       if (!loadedConversationIdsRef.current.has(conversationId)) {
@@ -247,6 +263,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [activeConversationId]);
 
+  const activeConversation = activeConversationId !== null
+    ? (conversations.find(c => c.id === activeConversationId) ?? null)
+    : null;
   const activeMessages = activeConversationId !== null
     ? (messagesByConversation[activeConversationId]?.messages ?? [])
     : [];
@@ -259,6 +278,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       value={{
         conversations,
         activeConversationId,
+        activeConversation,
         activeMessages,
         hasMoreMessages,
         connectionState,

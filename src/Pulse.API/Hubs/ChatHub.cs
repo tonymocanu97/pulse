@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Pulse.Application.Conversations.Commands.MarkConversationAsRead;
 using Pulse.Application.Users.Commands.SetOnlineStatus;
 
 namespace Pulse.API.Hubs
@@ -27,6 +28,9 @@ namespace Pulse.API.Hubs
 
         public Task LeaveConversation(int conversationId) =>
             Groups.RemoveFromGroupAsync(Context.ConnectionId, ConversationGroupName(conversationId));
+
+        public Task MarkAsRead(int conversationId) =>
+            mediator.Send(new MarkConversationAsReadCommand(conversationId, GetUserId()));
 
         public Task SendTypingIndicator(int conversationId)
         {

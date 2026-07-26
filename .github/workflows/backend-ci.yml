@@ -1,0 +1,45 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, development]
+    paths:
+      - 'src/Pulse.API/**'
+      - 'src/Pulse.Application/**'
+      - 'src/Pulse.Domain/**'
+      - 'src/Pulse.Infrastructure/**'
+      - 'tests/**'
+      - 'Pulse.slnx'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [main, development]
+    paths:
+      - 'src/Pulse.API/**'
+      - 'src/Pulse.Application/**'
+      - 'src/Pulse.Domain/**'
+      - 'src/Pulse.Infrastructure/**'
+      - 'tests/**'
+      - 'Pulse.slnx'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Pulse.slnx
+
+      - name: Build
+        run: dotnet build Pulse.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Pulse.slnx --no-build --configuration Release --verbosity normal

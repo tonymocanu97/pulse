@@ -1,37 +1,23 @@
+import { useState } from 'react';
+
+import { ChatView } from '@/components/chat/ChatView';
 import { ConversationList } from '@/components/chat/ConversationList';
-import { MessageComposer } from '@/components/chat/MessageComposer';
-import { MessageList } from '@/components/chat/MessageList';
-import { useAuth } from '@/lib/auth/auth-context';
-import { ChatProvider, useChat } from '@/lib/chat/chat-context';
+import { DetailsPanel } from '@/components/chat/DetailsPanel';
+import { LeftRail } from '@/components/chat/LeftRail';
+import { NewConversationModal } from '@/components/chat/NewConversationModal';
+import { ChatProvider } from '@/lib/chat/chat-context';
 
 function ChatLayout() {
-  const { user, logout } = useAuth();
-  const { connectionState } = useChat();
+  const [showDetails, setShowDetails] = useState(true);
+  const [showNewConversation, setShowNewConversation] = useState(false);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
-        <div>
-          <h1 className="text-lg font-bold">Pulse</h1>
-          <p className="text-xs text-muted-foreground">
-            {user?.username} &middot; {connectionState}
-          </p>
-        </div>
-        <button
-          onClick={logout}
-          className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-surface"
-        >
-          Log Out
-        </button>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden">
-        <ConversationList />
-        <main className="flex flex-1 flex-col overflow-hidden">
-          <MessageList />
-          <MessageComposer />
-        </main>
-      </div>
+    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+      <LeftRail onNewConversation={() => setShowNewConversation(true)} />
+      <ConversationList />
+      <ChatView onToggleDetails={() => setShowDetails(v => !v)} />
+      {showDetails && <DetailsPanel onClose={() => setShowDetails(false)} />}
+      <NewConversationModal open={showNewConversation} onClose={() => setShowNewConversation(false)} />
     </div>
   );
 }

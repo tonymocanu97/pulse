@@ -24,6 +24,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updated: AuthUser) => void;
 };
 
 const STORAGE_KEY = 'pulse-auth';
@@ -73,8 +74,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
   };
 
+  const updateUser = (updated: AuthUser) => {
+    setUser(updated);
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && token) {
+      const parsed = JSON.parse(stored) as AuthResponse;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...parsed, user: updated }));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

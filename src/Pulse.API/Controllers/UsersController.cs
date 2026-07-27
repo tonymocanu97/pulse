@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.Application.Auth.DTOs;
+using Pulse.Application.Users.Commands.UpdateProfile;
+using Pulse.Application.Users.DTOs;
 using Pulse.Application.Users.Queries.SearchUsers;
 
 namespace Pulse.API.Controllers
@@ -22,6 +24,21 @@ namespace Pulse.API.Controllers
 
             var users = await mediator.Send(new SearchUsersQuery(query, CurrentUserId, take), ct);
             return Ok(users);
+        }
+
+        [HttpPatch("me")]
+        public async Task<ActionResult<UserDto>> UpdateProfile(UpdateProfileRequest request, CancellationToken ct)
+        {
+            var (response, error) = await mediator.Send(
+                new UpdateProfileCommand(CurrentUserId, request.Username, request.AvatarUrl), ct);
+
+            return error switch
+            {
+                UpdateProfileError.EmptyUsername => BadRequest("Username cannot be empty."),
+                UpdateProfileError.UsernameTaken => Conflict("Username is already taken."),
+                UpdateProfileError.UserNotFound => NotFound(),
+                _ => Ok(response)
+            };
         }
     }
 }

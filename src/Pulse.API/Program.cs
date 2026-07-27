@@ -48,7 +48,14 @@ namespace Pulse.API
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-            builder.Services.AddSignalR();
+
+            // SignalR's hub protocol has its own independent JSON serializer config - it does
+            // NOT inherit the MVC JsonOptions above, so without this, enums like MessageType
+            // serialize as raw ints over the wire for live broadcasts (while REST responses,
+            // going through MVC, correctly serialize as strings) and frontend checks like
+            // `message.type === 'Text'` silently fail for anything delivered live.
+            builder.Services.AddSignalR()
+                .AddJsonProtocol(options => options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
             builder.Services.AddApplication();
             builder.Services.AddInfrastructure(builder.Configuration);

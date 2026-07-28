@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using NLog;
@@ -12,6 +13,7 @@ using Pulse.API.Hubs;
 using Pulse.Application;
 using Pulse.Application.Common.Interfaces;
 using Pulse.Infrastructure;
+using Pulse.Infrastructure.Persistence;
 
 namespace Pulse.API
 {
@@ -138,6 +140,15 @@ namespace Pulse.API
             var app = builder.Build();
 
             var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+            // Hosted environments (Railway, etc.) don't give us a shell to run `dotnet ef
+            // database update` against - apply pending migrations on boot instead, so a
+            // fresh deploy provisions its own schema without a manual migration step.
+            using (var migrationScope = app.Services.CreateScope())
+            {
+                var dbContext = migrationScope.ServiceProvider.GetRequiredService<PulseDbContext>();
+                dbContext.Database.Migrate();
+            }
 
             // Expected failures (not found, bad input, conflicts) are handled by each
             // controller/handler returning the right result. This only catches genuinely

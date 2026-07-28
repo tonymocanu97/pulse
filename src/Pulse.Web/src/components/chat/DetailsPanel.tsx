@@ -2,7 +2,7 @@ import { Bell, FileText, Link as LinkIcon, Search, Star, X } from 'lucide-react'
 import type { ReactNode } from 'react';
 
 import { Avatar } from '@/components/chat/Avatar';
-import { API_ORIGIN } from '@/lib/api-client';
+import { resolveAssetUrl } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useChat } from '@/lib/chat/chat-context';
 import { getDisplayName, getOtherParticipant } from '@/lib/conversation-display';
@@ -70,7 +70,7 @@ export function DetailsPanel({ onClose }: { onClose: () => void }) {
               {images.map(m => (
                 <div key={m.id} className="aspect-square overflow-hidden rounded-md bg-surface-2">
                   <img
-                    src={`${API_ORIGIN}${m.attachmentUrl}`}
+                    src={resolveAssetUrl(m.attachmentUrl!)}
                     alt={m.attachmentFileName ?? 'Shared image'}
                     className="h-full w-full object-cover transition-transform hover:scale-105"
                   />
@@ -88,7 +88,7 @@ export function DetailsPanel({ onClose }: { onClose: () => void }) {
               {files.map(m => (
                 <a
                   key={m.id}
-                  href={`${API_ORIGIN}${m.attachmentUrl}`}
+                  href={resolveAssetUrl(m.attachmentUrl!)}
                   download={m.attachmentFileName ?? undefined}
                   target="_blank"
                   rel="noreferrer"
@@ -152,7 +152,7 @@ function MiniAction({ icon, label }: { icon: ReactNode; label: string }) {
   return (
     <button
       disabled
-      title={`${label} — coming soon`}
+      title={`${label} - coming soon`}
       className="flex w-20 cursor-not-allowed flex-col items-center gap-1 rounded-lg border border-border bg-surface-2 py-2 text-[10px] text-muted-foreground/50"
     >
       {icon}

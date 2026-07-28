@@ -1,4 +1,4 @@
-import { API_ORIGIN } from '@/lib/api-client';
+import { resolveAssetUrl } from '@/lib/api-client';
 import { getAvatarColor, getInitials, shadeColor } from '@/lib/avatar-color';
 import { cn } from '@/lib/utils';
 
@@ -43,7 +43,7 @@ export function Avatar({
     <div className={cn('relative shrink-0', className)}>
       {avatarUrl ? (
         <img
-          src={`${API_ORIGIN}${avatarUrl}`}
+          src={resolveAssetUrl(avatarUrl)}
           alt={name}
           className={cn('rounded-full object-cover', sizeClasses[size])}
         />

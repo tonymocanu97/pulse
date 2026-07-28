@@ -106,7 +106,7 @@ function RailItem({
   }
 
   return (
-    <button disabled={disabled} title={disabled ? `${label} — coming soon` : label} className={className}>
+    <button disabled={disabled} title={disabled ? `${label} - coming soon` : label} className={className}>
       {content}
     </button>
   );

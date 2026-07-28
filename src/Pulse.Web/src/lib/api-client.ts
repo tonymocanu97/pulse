@@ -59,4 +59,12 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   return JSON.parse(raw) as T;
 }
 
-export { API_BASE_URL, API_ORIGIN };
+// Most media URLs are relative paths served by the backend (e.g. /uploads/xxx from a
+// real upload), so they need the API origin prefixed. Demo/seed assets instead live in
+// the frontend's own public/ folder and come back as absolute URLs - those are already
+// complete and must be used as-is, or prefixing would mangle them.
+function resolveAssetUrl(url: string): string {
+  return /^https?:\/\//.test(url) ? url : `${API_ORIGIN}${url}`;
+}
+
+export { API_BASE_URL, API_ORIGIN, resolveAssetUrl };

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Avatar } from '@/components/chat/Avatar';
 import type { Message, MessageReaction } from '@/lib/api/messages';
-import { API_ORIGIN } from '@/lib/api-client';
+import { resolveAssetUrl } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useChat } from '@/lib/chat/chat-context';
 import { formatClock, formatDayLabel, formatFileSize } from '@/lib/time-format';
@@ -252,7 +252,7 @@ function MessageBubble({
       {message.type === 'Image' && message.attachmentUrl && (
         <div className={cn('overflow-hidden rounded-2xl border border-border', isOwn ? 'rounded-br-md' : 'rounded-bl-md')}>
           <img
-            src={`${API_ORIGIN}${message.attachmentUrl}`}
+            src={resolveAssetUrl(message.attachmentUrl)}
             alt={message.attachmentFileName ?? 'Shared image'}
             className="max-h-72 w-auto object-cover"
           />
@@ -262,7 +262,7 @@ function MessageBubble({
 
       {message.type === 'File' && message.attachmentUrl && (
         <a
-          href={`${API_ORIGIN}${message.attachmentUrl}`}
+          href={resolveAssetUrl(message.attachmentUrl)}
           download={message.attachmentFileName ?? undefined}
           target="_blank"
           rel="noreferrer"

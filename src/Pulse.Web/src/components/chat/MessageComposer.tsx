@@ -94,7 +94,7 @@ export function MessageComposer() {
           <IconBtn onClick={() => setShowEmoji(v => !v)} title="Emoji">
             <Smile className="h-4 w-4" />
           </IconBtn>
-          <IconBtn disabled title="Voice message — coming soon">
+          <IconBtn disabled title="Voice message - coming soon">
             <Mic className="h-4 w-4" />
           </IconBtn>
 

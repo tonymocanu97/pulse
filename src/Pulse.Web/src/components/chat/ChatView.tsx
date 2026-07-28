@@ -59,16 +59,16 @@ export function ChatView({ onToggleDetails }: { onToggleDetails: () => void }) {
         </div>
 
         <div className="flex items-center gap-1">
-          <IconBtn disabled title="Voice call — coming soon">
+          <IconBtn disabled title="Voice call - coming soon">
             <Phone className="h-4 w-4" />
           </IconBtn>
-          <IconBtn disabled title="Video call — coming soon">
+          <IconBtn disabled title="Video call - coming soon">
             <Video className="h-4 w-4" />
           </IconBtn>
           <IconBtn onClick={onToggleDetails} title="Conversation details">
             <PanelRight className="h-4 w-4" />
           </IconBtn>
-          <IconBtn disabled title="More — coming soon">
+          <IconBtn disabled title="More - coming soon">
             <MoreHorizontal className="h-4 w-4" />
           </IconBtn>
         </div>

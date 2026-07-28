@@ -2,12 +2,12 @@
 
 Real-time chat app with private and group conversations, built with ASP.NET Core, SignalR, MediatR, React, TypeScript, and PostgreSQL.
 
-![Pulse chat preview](docs/chat-preview.png)
-
 [![Backend CI](https://github.com/tonymocanu97/pulse/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/tonymocanu97/pulse/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/tonymocanu97/pulse/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/tonymocanu97/pulse/actions/workflows/frontend-ci.yml)
 
 **Live:** https://pulse-web-henna-two.vercel.app/
+
+![Pulse chat preview](docs/chat-preview.png)
 
 ## Tech Stack
 

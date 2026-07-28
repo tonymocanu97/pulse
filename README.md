@@ -7,6 +7,8 @@ Real-time chat app with private and group conversations, built with ASP.NET Core
 [![Backend CI](https://github.com/tonymocanu97/pulse/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/tonymocanu97/pulse/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/tonymocanu97/pulse/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/tonymocanu97/pulse/actions/workflows/frontend-ci.yml)
 
+**Live:** https://pulse-web-henna-two.vercel.app/
+
 ## Tech Stack
 
 **Backend:** ASP.NET Core · SignalR · MediatR (CQRS) · EF Core · PostgreSQL · JWT Auth · BCrypt
